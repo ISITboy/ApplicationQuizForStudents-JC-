@@ -24,6 +24,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role.Companion.Image
 import androidx.compose.ui.unit.dp
 import com.example.applicationquizforstudents.R
+import com.example.applicationquizforstudents.presentation.navgraph.MenuDestination
+import com.example.applicationquizforstudents.presentation.navgraph.ProfileDestination
+import com.example.applicationquizforstudents.presentation.ui.screens.quiz.components.TopAppBarLayout
 import com.example.applicationquizforstudents.presentation.ui.screens.quiz.question.QuestionScreen
 
 @Composable
@@ -31,6 +34,9 @@ fun MenuScreen(
     modifier: Modifier=Modifier,
     onEvent:(MenuEvent)->Unit
 ){
+    TopAppBarLayout(route = MenuDestination.route) {
+
+    }
     val openDialog = remember { mutableStateOf(false)  }
     Row(
         modifier = Modifier.fillMaxWidth().padding(top = 10.dp),

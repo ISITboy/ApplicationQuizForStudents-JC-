@@ -1,18 +1,13 @@
 package com.example.applicationquizforstudents.presentation.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -20,8 +15,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.applicationquizforstudents.presentation.navgraph.MenuDestination
+import com.example.applicationquizforstudents.presentation.navgraph.NavGraphState
 import com.example.applicationquizforstudents.presentation.navgraph.ProfileDestination
 import com.example.applicationquizforstudents.presentation.navgraph.QuestionDestination
+import com.example.applicationquizforstudents.presentation.navgraph.rememberAppState
 import com.example.applicationquizforstudents.presentation.navgraph.tabRowScreens
 import com.example.applicationquizforstudents.presentation.ui.Utils.navigateSingleTopTo
 import com.example.applicationquizforstudents.presentation.ui.screens.quiz.components.BottomNavBar
@@ -31,26 +28,18 @@ import com.example.applicationquizforstudents.presentation.ui.screens.quiz.menu.
 import com.example.applicationquizforstudents.presentation.ui.screens.quiz.menu.MenuScreenViewModel
 import com.example.applicationquizforstudents.presentation.ui.screens.quiz.profile.ProfileScreen
 import com.example.applicationquizforstudents.presentation.ui.screens.quiz.profile.ProfileScreenViewModel
-import com.example.applicationquizforstudents.presentation.ui.screens.quiz.question.QuestionScreen
-import com.example.applicationquizforstudents.presentation.ui.screens.quiz.question.QuestionScreenViewModel
 
 @Composable
-fun QuizNavigator(modifier: Modifier = Modifier,_navController: NavHostController) {
+fun QuizNavigator(modifier: Modifier = Modifier, mainNavController: NavHostController) {
     val currentScreen = remember { tabRowScreens }
-    val navController = rememberNavController()
-    val backStackState by navController.currentBackStackEntryAsState()
-    val rote = backStackState?.destination?.route
+    val navGraphState = rememberAppState()
+    val backStackState by navGraphState.navController.currentBackStackEntryAsState()
     Scaffold(
-        topBar = {
-            TopAppBarLayout(route = rote) {
-
-            }
-        },
         bottomBar = {
             BottomNavBar(
                 allScreens = currentScreen,
                 onTabSelected = { newScreen ->
-                    navController.navigateSingleTopTo(newScreen.route)
+                    navGraphState.navController.navigateSingleTopTo(newScreen.route)
                 },
                 currentScreen = getCurrentScreen(backStackState?.destination)
             )
@@ -58,8 +47,8 @@ fun QuizNavigator(modifier: Modifier = Modifier,_navController: NavHostControlle
     ) { paddingValues ->
         AppNavHost(
             paddingValues = paddingValues,
-            navController = navController,
-            _navController = _navController
+            appState = navGraphState,
+            mainNavController = mainNavController
         )
     }
 }
@@ -67,12 +56,12 @@ fun QuizNavigator(modifier: Modifier = Modifier,_navController: NavHostControlle
 @Composable
 fun AppNavHost(
     paddingValues: PaddingValues,
-    navController: NavHostController,
-    _navController: NavHostController
+    appState: NavGraphState,
+    mainNavController: NavHostController
 ) {
 
     NavHost(
-        navController = navController,
+        navController = appState.navController,
         startDestination = MenuDestination.route,
         modifier = Modifier.padding(paddingValues)
     ) {
@@ -84,7 +73,7 @@ fun AppNavHost(
 
                     }
                     MenuEvent.ToStartTest ->{
-                        _navController.navigate(route = QuestionDestination.route)
+                        mainNavController.navigate(route = QuestionDestination.route)
                     }
                 }
 

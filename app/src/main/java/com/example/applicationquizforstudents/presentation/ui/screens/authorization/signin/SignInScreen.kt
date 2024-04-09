@@ -9,28 +9,54 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.internal.enableLiveLiterals
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.applicationquizforstudents.R
+import com.example.applicationquizforstudents.domain.state.AuthResult
 import com.example.applicationquizforstudents.presentation.ui.screens.authorization.components.EmailInputLayout
 import com.example.applicationquizforstudents.presentation.ui.screens.authorization.components.PasswordInputLayout
 import com.example.applicationquizforstudents.presentation.ui.screens.authorization.components.isValidEmail
 import com.example.applicationquizforstudents.presentation.ui.screens.authorization.components.isValidPassword
+import com.example.applicationquizforstudents.presentation.ui.screens.common.ProgressIndicator
 
 @Composable
 fun AuthorizationScreen(
-    modifier: Modifier = Modifier,
-    viewModel: SignInViewModel,
+    modifier : Modifier=Modifier,
+    viewModel: SignInViewModel = hiltViewModel(),
     openAndPopUp: (String, String) -> Unit,
 ) {
+
+    var errorMessage by remember {
+        mutableStateOf("")
+    }
+    when (viewModel.authState.collectAsState().value) {
+        is AuthResult.Loading -> {
+            ProgressIndicator()
+        }
+        is AuthResult.Nothing, is AuthResult.Success -> {}
+        is AuthResult.Error -> {
+            errorMessage =
+                (viewModel.authState.collectAsState().value as AuthResult.Error).e.message.toString()
+        }
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -63,9 +89,8 @@ fun AuthorizationScreen(
             onChangePassword = { viewModel.updatePassword(it) })
         Spacer(modifier = Modifier.height(30.dp))
         SignInButton {
-            viewModel.onSignInClick(openAndPopUp)
             if (isValidEmail(email.value) && isValidPassword(password.value)) {
-                Log.d("Usik", email.value)
+                viewModel.onSignInClick(openAndPopUp)
             } else {
                 if (!isValidEmail(email.value)) invalidEmail.value = true
                 if (!isValidPassword(password.value)) invalidPassword.value = true
@@ -75,7 +100,16 @@ fun AuthorizationScreen(
         GoToRegistrationScreen {
             viewModel.onSignUpClick(openAndPopUp)
         }
+        Spacer(modifier = Modifier.height(20.dp))
+        Text(
+            text = errorMessage,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.error
+        )
     }
 }
+
+
+
 
 

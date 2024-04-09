@@ -1,7 +1,8 @@
 package com.example.applicationquizforstudents.data.impl
 
 import com.example.applicationquizforstudents.domain.models.User
-import com.example.applicationquizforstudents.domain.repository.AccountService
+import com.example.applicationquizforstudents.data.service.AccountService
+import com.example.applicationquizforstudents.domain.state.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
@@ -11,12 +12,12 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-class AccountServiceImpl @Inject constructor ():AccountService {
+class AccountServiceImpl @Inject constructor (): AccountService {
     override val currentUser: Flow<User?>
         get() = callbackFlow {
             val listener =
                 FirebaseAuth.AuthStateListener { auth ->
-                    this.trySend(auth.currentUser?.let { User(id = it.uid) })
+                    this.trySend(auth.currentUser?.let { User.Base(id = it.uid, email = it.email?:"") })
                 }
             Firebase.auth.addAuthStateListener(listener)
             awaitClose { Firebase.auth.removeAuthStateListener(listener) }
@@ -29,12 +30,31 @@ class AccountServiceImpl @Inject constructor ():AccountService {
         return Firebase.auth.currentUser != null
     }
 
-    override suspend fun signIn(email: String, password: String) {
-        Firebase.auth.signInWithEmailAndPassword(email, password).await()
+    override fun updateEmail(email:String){
+        FirebaseAuth.getInstance().currentUser?.updateEmail(email)
     }
 
-    override suspend fun signUp(email: String, password: String) {
-        Firebase.auth.createUserWithEmailAndPassword(email, password).await()
+    override fun updatePassword(password:String){
+        FirebaseAuth.getInstance().currentUser?.updatePassword(password)
+    }
+    override fun getEmail() = Firebase.auth.currentUser?.email
+
+    override suspend fun signIn(email: String, password: String) : AuthResult {
+        return try {
+            val user = Firebase.auth.signInWithEmailAndPassword(email, password).await().user!!
+            AuthResult.Success(User.Base(user.email ?: " ", user.uid))
+        } catch (e: Exception) {
+            AuthResult.Error(e)
+        }
+    }
+
+    override suspend fun signUp(email: String, password: String): AuthResult {
+        return try {
+            val user =  Firebase.auth.createUserWithEmailAndPassword(email, password).await().user!!
+            AuthResult.Success(User.Base(user.email ?: " ", user.uid))
+        } catch (e: Exception) {
+            AuthResult.Error(e)
+        }
     }
 
     override suspend fun signOut() {

@@ -1,22 +1,23 @@
 package com.example.applicationquizforstudents.presentation.ui.screens.authorization.signin
 
-import androidx.lifecycle.ViewModel
-import com.example.applicationquizforstudents.domain.repository.AccountService
+import androidx.lifecycle.viewModelScope
+import com.example.applicationquizforstudents.data.service.AccountService
+import com.example.applicationquizforstudents.domain.state.AuthResult
 import com.example.applicationquizforstudents.presentation.navgraph.AuthorizationDestination
-import com.example.applicationquizforstudents.presentation.navgraph.Destination
 import com.example.applicationquizforstudents.presentation.navgraph.MenuDestination
 import com.example.applicationquizforstudents.presentation.navgraph.RegistrationDestination
-import com.example.applicationquizforstudents.presentation.ui.screens.NotesAppViewModel
+import com.example.applicationquizforstudents.presentation.ui.screens.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SignInViewModel @Inject constructor(
     private val accountService: AccountService
-) : NotesAppViewModel() {
+) : BaseViewModel() {
     // Backing properties to avoid state updates from other classes
     private val _email = MutableStateFlow("")
     val email: StateFlow<String> = _email.asStateFlow()
@@ -33,13 +34,19 @@ class SignInViewModel @Inject constructor(
     }
 
     fun onSignInClick(openAndPopUp: (String, String) -> Unit) {
-        launchCatching {
-            accountService.signIn(_email.value, _password.value)
-            openAndPopUp(MenuDestination.route, AuthorizationDestination.route)
+        sendCredentials(email.value,password.value)
+        viewModelScope.launch {
+            authState.collect{
+                if(it is AuthResult.Success)openAndPopUp(MenuDestination.route,AuthorizationDestination.route)
+            }
         }
     }
 
     fun onSignUpClick(openAndPopUp: (String, String) -> Unit) {
-        openAndPopUp(RegistrationDestination.route, AuthorizationDestination.route)
+        val email = this.email.value.ifBlank { "empty" }
+        openAndPopUp("${RegistrationDestination.route}/${email}", AuthorizationDestination.route)
     }
+
+    override val sendRequest: suspend (String, String) -> AuthResult =
+        { email, password -> accountService.signIn(email, password) }
 }

@@ -15,6 +15,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.Navigation
 import com.example.applicationquizforstudents.presentation.navgraph.AuthorizationNavigation
 import com.example.applicationquizforstudents.presentation.navgraph.NavGraph
 import com.example.applicationquizforstudents.presentation.navgraph.QuizNavigation
@@ -31,16 +33,20 @@ class MainActivity : ComponentActivity() {
         setContent {
             ApplicationQuizForStudentsTheme {
                 val startDestination = remember {
-                    mutableStateOf(AuthorizationNavigation.route)
+                    mutableStateOf("SplashNavigation")
+                }
+                val viewModel :MainActivityViewModel = hiltViewModel()
+                viewModel.getUserState()
+                viewModel.userState.observe(this){user->
+                    if(user==null) startDestination.value = AuthorizationNavigation.route
+                    else {startDestination.value = QuizNavigation.route }
                 }
                 Box(
                     modifier = Modifier
                         .background(MaterialTheme.colorScheme.background)
                         .fillMaxSize()
                 ) {
-                    NavGraph(startDestination = startDestination.value){
-                        startDestination.value = QuizNavigation.route
-                    }
+                    NavGraph(startDestination = startDestination)
                 }
 
             }

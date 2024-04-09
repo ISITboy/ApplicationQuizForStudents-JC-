@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 
 data class ImageModel(
     val id :Int = 0,
-    @DrawableRes val url : Int,
+    val url : String,
+    val description:String,
     val selected : MutableState<Boolean> = mutableStateOf(false)
 )

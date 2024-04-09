@@ -89,6 +89,29 @@ object ResultDestination :Destination{
         get() = null
 }
 
+object SplashDestination :Destination{
+    override val route: String
+        get() = "SplashDestination"
+    override val point: BottomNavigationPoint?
+        get() = null
+}
+
+object EditImageDestination :Destination{
+    override val route: String
+        get() = "EditImageDestination"
+
+    const val editTypeArg = "edit_type"
+    val routeWithArgs = "${route}/{${editTypeArg}}"
+    val arguments = listOf(
+        navArgument(editTypeArg) { type = NavType.IntType }
+    )
+    override val point: BottomNavigationPoint?
+        get() = null
+}
+
+
+
+
 
 
 val tabRowScreens = listOf(
